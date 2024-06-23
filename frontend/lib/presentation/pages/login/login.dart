@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/presentation/bottom_nav.dart';
+import 'package:frontend/presentation/constants.dart';
 import 'package:frontend/presentation/pages/login/signup.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -51,8 +53,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
       child: SingleChildScrollView(
+        
         child: Column(
           children: [
             Align(
@@ -72,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             Container(
               margin: const EdgeInsets.only(top: 5, left: 55, right: 55),
-              child: Image.asset('assets/amico.png'),
+              child: Image.asset(Images.AmicoImg),
             ),
             const SizedBox(
               height: 20,
@@ -142,48 +146,48 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                Align(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 10, left: 20, right: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
+                Container(
+                  margin: const EdgeInsets.only(top: 10, left: 20, right: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>const BottomNav()));
+                        },
+                        style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: const Color(0xFF5177FF),
+                            disabledBackgroundColor: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.12),
+                            animationDuration: const Duration(seconds: 1),
+                            minimumSize: const Size(170, 47)),
+                        child: const Text(
+                          'Đăng nhập',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
                           onPressed: () {},
                           style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: const Color(0xFF5177FF),
-                              disabledBackgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.12),
-                              animationDuration: const Duration(seconds: 1),
-                              minimumSize: const Size(170, 47)),
-                          child: const Text(
-                            'Đăng nhập',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 18,
-                            ),
+                            foregroundColor: const Color(0xFF5177FF),
+                            backgroundColor:
+                                Colors.white,
+                            elevation: 0,
                           ),
+                          child: const Text('Quên mật khẩu',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: const Color(0xFF5177FF),
-                              backgroundColor:
-                                  Theme.of(context).scaffoldBackgroundColor,
-                              elevation: 0,
-                            ),
-                            child: const Text('Quên mật khẩu',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w500)),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(

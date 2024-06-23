@@ -1,6 +1,10 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/pages/login/login.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -69,10 +73,41 @@ class __SignUpPagState extends State<SignUpPage> {
     super.dispose();
   }
 
+  void sendEmailWithDeepLink() async {
+    String username = 'vyle.1110035@gmail.com'; // Thay bằng địa chỉ email của bạn
+    String password = 'Thaivy1110035'; // Thay bằng mật khẩu email của bạn
+
+    final smtpServer = gmail(username, password);
+
+    final message = Message()
+      ..from = Address(username, 'Tên của bạn')
+      ..recipients.add('vyle.111003@gmail.com') // Thay bằng email người nhận
+      ..subject = 'Email có chứa deep link'
+      ..html = '''
+    <p>Xin chào,</p>
+    <p>Đây là một deep link để mở ứng dụng của tôi:</p>
+    <a href="myapp://main/details">Nhấp vào đây để mở ứng dụng</a>
+    ''';
+
+    try {
+      final sendReport = await send(message, smtpServer);
+      print('Email đã được gửi thành công!');
+
+      // Kiểm tra và xử lý kết quả gửi email
+      if (sendReport != null) {
+        print('Response: ${sendReport.toString()}');
+      } else {
+        print('Không có phản hồi từ server.');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi email: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           child: Center(
@@ -228,7 +263,7 @@ class __SignUpPagState extends State<SignUpPage> {
                     height: 20,
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: sendEmailWithDeepLink,
                     style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: const Color(0xFF5177FF),
@@ -254,7 +289,6 @@ class __SignUpPagState extends State<SignUpPage> {
                             context,
                             PageTransition(
                               type: PageTransitionType.leftToRightWithFade,
-                              
                               duration: const Duration(milliseconds: 500),
                               child: const LoginPage(),
                             ),

@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             Container(
               margin: const EdgeInsets.only(top: 5, left: 55, right: 55),
-              child: Image.asset(Images.AmicoImg),
+              child: Image.asset(Images.amicoImg),
             ),
             const SizedBox(
               height: 20,

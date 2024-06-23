@@ -137,47 +137,47 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     DirectoryModel(
       name: 'Dack',
       isOnl: 'Hoạt động 10 phút trước',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Kali',
       isOnl: 'Hoạt động 10 phút trước',
-      imgpath: Images.AvataKali,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Aki',
       isOnl: 'Hoạt động 10 phút trước',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Jack',
       isOnl: 'Hoạt động 10 phút trước',
-      imgpath: Images.AvataJack,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Kali',
       isOnl: 'Hoạt động 10 phút trước',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Henry',
       isOnl: 'Đang hoạt động',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Jack',
       isOnl: 'Đang hoạt động',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Henry',
       isOnl: 'Đang hoạt động',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
     DirectoryModel(
       name: 'Jack',
       isOnl: 'Đang hoạt động',
-      imgpath: Images.AvataHenry,
+      imgpath: Images.avataHenry,
     ),
   ];
 

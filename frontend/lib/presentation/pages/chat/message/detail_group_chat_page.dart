@@ -803,7 +803,7 @@ class _Detail_group_chatState extends State<DetailGroupChatPage> {
                     },
                     child: Center(
                       child: Image.asset(
-                        Images.UnionIcon,
+                        Images.unionIcon,
                         height: 14,
                       ),
                     ),

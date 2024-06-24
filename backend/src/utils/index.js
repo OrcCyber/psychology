@@ -14,9 +14,6 @@ function withTransaction(fn) {
       logger.error(e);
       (await session).abortTransaction();
       next(e);
-    } finally {
-      logger.info("Transaction ended");
-      (await session).endSession();
     }
   };
 }

@@ -1,3 +1,6 @@
+.vscode/
+
+#Backend
 **/logs
 **/*.log
 **/npm-debug.log*
@@ -58,9 +61,9 @@
 **/.yarn/build-state.yml
 **/.yarn/install-state.gz
 **/.pnp.*
+**/package-lock.json
 
-#################################################################################
-# Miscellaneous
+#Frontend
 **/**/*.class
 **/**/*.log
 **/**/*.pyc
@@ -71,15 +74,10 @@
 **/**/.history
 **/**/.svn/
 **/**/migrate_working_dir/
-
-# IntelliJ related
 **/**/*.iml
 **/**/*.ipr
 **/**/*.iws
 **/**/.idea/
-
-.vscode/
-# Flutter/Dart/Pub related
 **/**/doc/api/
 **/**/ios/Flutter/.last_build_id
 **/**/.dart_tool/
@@ -88,14 +86,8 @@
 **/**/.pub-cache/
 **/**/.pub/
 **/**/build/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+**/**/app.*.symbols
+**/**/app.*.map.json
+**/**/android/app/debug
+**/**/android/app/profile
+**/**/android/app/release

@@ -5,7 +5,7 @@ const nodemailer = require("nodemailer");
 const { errorHandler, withTransaction, identifyRequest } = require("../utils");
 const bcrypt = require("bcrypt");
 
-var transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
@@ -17,9 +17,9 @@ const resendEmail = errorHandler(async (req, res, next) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).send({
-      status: "OK",
+      status: "ERROR",
       data: {
-        message: "Field email is required.",
+        message: "Email is required.",
       },
     });
   }
@@ -28,15 +28,20 @@ const resendEmail = errorHandler(async (req, res, next) => {
     process.env.VERIFY_EMAIL_TOKEN,
     process.env.VERIFY_EMAIL_EXPIRES
   );
-  const url = `http://${hostname}:${process.env.PORT}/api/auth/verify?token=${token}`;
+  const url = `http://${req.hostname}:${process.env.PORT}/api/auth/verify?token=${token}`;
   let mailOptions = {
     to: email,
     subject: "Email Verification",
     html: `<a href="${url}">Verify</a>`,
   };
-  await transporter.sendMail(mailOptions);
+  const emailResend = await transporter.sendMail(mailOptions);
+  logger.info(emailResend);
   return res.status(201).send({
     status: "SUCCESS",
+    data: {
+      message: "Resend verify to email successfully",
+      info: emailResend,
+    },
   });
 });
 
@@ -105,17 +110,31 @@ const signin = errorHandler(async (req, res, next) => {
         mesage: "User not verrify email",
       },
     });
-  const hash = await bcrypt.hash(password, 10);
+  const accessToken = generateJWT(
+    { email },
+    process.env.ACCESS_TOKEN_SECRET,
+    process.env.ACCESS_TOKEN_EXPIRES
+  );
+  const refreshToken = generateJWT(
+    { email },
+    process.env.REFRESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_EXPIRES
+  );
   const match = await bcrypt.compare(password, user.password);
-  console.log(`mật khẩu băm được lấy từ người dùng ${hash}`);
-  console.log(`mật khẩu băm được lấy từ CSDL ${hash}`);
-  console.log(match);
+  if (!match) {
+    return res.status(403).send({
+      status: "Forbiden",
+      data: {
+        message: "Password incorrect",
+      },
+    });
+  }
   return res.status(200).send({
     status: "SUCCESS",
     data: {
       message: "Login accepted",
-      accessToken: 123,
-      refreshToken: 123,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     },
   });
 });
@@ -142,6 +161,7 @@ const verify = errorHandler(
       process.env.REFRESH_TOKEN_EXPIRES
     );
     if (user.isVerify) {
+      await user.save({ session });
       return res.status(200).send({
         status: "SUCCESS",
         data: {

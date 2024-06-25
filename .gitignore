@@ -62,6 +62,7 @@
 **/.yarn/install-state.gz
 **/.pnp.*
 **/package-lock.json
+**/**/package-lock.json
 
 #Frontend
 **/**/*.class

@@ -2,9 +2,15 @@ const jwt = require("jsonwebtoken");
 const logger = require("../logger");
 const models = require("../models");
 const nodemailer = require("nodemailer");
-const { errorHandler, withTransaction, identifyRequest } = require("../utils");
+const {
+  errorHandler,
+  withTransaction,
+  identifyRequest,
+  isExpiredToken,
+} = require("../utils");
 const bcrypt = require("bcrypt");
 
+// Mailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -45,13 +51,6 @@ const resendEmail = errorHandler(async (req, res, next) => {
   });
 });
 
-/**
- * @description: Register account for user and verify email
- * @param {*} req: request
- * @param {*} res: response
- * @param {*} next: next func
- * @returns: new user or rollback
- */
 const register = errorHandler(
   withTransaction(async (req, res, session) => {
     const { email, password, username } = req.body;
@@ -85,7 +84,7 @@ const register = errorHandler(
     };
     await transporter.sendMail(mailOptions);
     await user.save({ session });
-    return res.status(200).send({
+    return res.status(201).send({
       status: "OK",
       data: {
         message: "Register success, please verify email",
@@ -98,14 +97,14 @@ const signin = errorHandler(async (req, res, next) => {
   const user = await models.User.findOne({ email: email });
   if (!user)
     return res.status(404).send({
-      status: "OK",
+      status: "FAILED",
       data: {
         mesage: "User not found",
       },
     });
   if (!user.isVerify)
-    return res.status(400).send({
-      status: "OK",
+    return res.status(406).send({
+      status: "FAILED",
       data: {
         mesage: "User not verrify email",
       },
@@ -123,14 +122,14 @@ const signin = errorHandler(async (req, res, next) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) {
     return res.status(403).send({
-      status: "Forbiden",
+      status: "FAILED",
       data: {
         message: "Password incorrect",
       },
     });
   }
-  return res.status(200).send({
-    status: "SUCCESS",
+  return res.status(202).send({
+    status: "OK",
     data: {
       message: "Login accepted",
       accessToken: accessToken,
@@ -148,7 +147,12 @@ const verify = errorHandler(
       email: email,
     });
     if (!user) {
-      return res.status(200).send({ message: "An error" });
+      return res.status(404).send({
+        status: "FAILED",
+        data: {
+          message: "User not found",
+        },
+      });
     }
     const accessToken = generateJWT(
       { email },
@@ -162,10 +166,10 @@ const verify = errorHandler(
     );
     if (user.isVerify) {
       await user.save({ session });
-      return res.status(200).send({
-        status: "SUCCESS",
+      return res.status(304).send({
+        status: "OK",
         data: {
-          message: "Email has been verify",
+          message: "Authenticated user",
           accessToken: accessToken,
           refreshToken: refreshToken,
         },
@@ -173,8 +177,8 @@ const verify = errorHandler(
     }
     user.isVerify = true;
     await user.save({ session });
-    return res.status(200).send({
-      status: "SUCCESS",
+    return res.status(202).send({
+      status: "OK",
       data: {
         message: "Email is verify",
         accessToken: accessToken,
@@ -191,9 +195,57 @@ function generateJWT(payload, serect, expired) {
   });
 }
 
+const changePassword = errorHandler(
+  withTransaction(async (req, res, session) => {
+    const { currentPassword, newPassword, email } = req.body;
+    console.log(req.body);
+    if (!currentPassword || !newPassword || !email) {
+      return res.status(400).send({
+        status: "FAILED",
+        data: {
+          error: "Bad request",
+          message:
+            "Fields are required: [currentPassword, newPassword, accessToken]",
+        },
+      });
+    }
+    const user = await models.User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).send({
+        status: "FAILED",
+        data: {
+          error: "Bad request",
+          message: "User not found",
+        },
+      });
+    } else {
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match) {
+        return res.status(403).send({
+          status: "FAILED",
+          data: {
+            error: "Forbidden",
+            message: "Password incorrect",
+          },
+        });
+      } else {
+        user.password = newPassword;
+        await user.save({ session });
+        return res.status(200).send({
+          status: "OK",
+          data: {
+            message: "Password changed",
+          },
+        });
+      }
+    }
+  })
+);
+
 module.exports = {
   register,
   signin,
   verify,
   resendEmail,
+  changePassword,
 };

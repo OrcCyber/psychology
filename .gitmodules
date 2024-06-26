@@ -1,1 +1,4 @@
 
+[submodule "mobile"]
+	path = mobile
+	url = git@github.com:OrcCyber/psychology-mobile.git

@@ -7,10 +7,8 @@ const connectToDatabase = require("./database");
 
 // Routes
 const routes = require("./routes");
-
 /************************Converter************************/
 app.use(express.json());
-
 /************************Authentication************************/
 app.use("/api", routes);
 async function start() {

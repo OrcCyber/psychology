@@ -14,9 +14,6 @@ function withTransaction(fn) {
       logger.error(e);
       (await session).abortTransaction();
       next(e);
-    } finally {
-      logger.info("Transaction ended");
-      (await session).endSession();
     }
   };
 }
@@ -49,8 +46,16 @@ function isFromBrowser(agent) {
   return /Mozilla|Chrome|Safari|Firefox|Edge/.test(agent);
 }
 
+function isExpiredToken(exp) {
+  let expTime = new Date(exp * 1000);
+  let currentTime = new Date() / 1000;
+  if (expTime < currentTime) return true;
+  return false;
+}
+
 module.exports = {
   withTransaction,
   errorHandler,
   identifyRequest,
+  isExpiredToken,
 };

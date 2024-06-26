@@ -20,8 +20,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       min: 8,
       required: true,
-      lowercase: true,
-      trim: true,
     },
     email: {
       type: String,
@@ -48,24 +46,18 @@ const UserSchema = new mongoose.Schema(
 /**
  * @description: middleware hash password if it changed.
  */
-UserSchema.pre("save", function (next) {
+UserSchema.pre("save", async function (next) {
   const user = this;
   if (!user.isModified("password")) return next();
-  bcrypt.genSalt(10, (err, salt) => {
-    if (err) return next(err);
-    bcrypt.hash(user.password, salt, (err, hash) => {
-      if (err) {
-        logger.error(err);
-        return next(err);
-      }
-      user.password = hash;
-      next();
-    });
-  });
+  const hash = await bcrypt.hash(user.password, 10);
+  console.log(`mật khẩu trước khi lưu vào cơ sở dữ liệu ==> ${user.password}`);
+  console.log(`mật khẩu sau khi băm bằng bcrypt ==> ${hash}`);
+  user.password = hash;
+  next();
 });
 
 /**
- * @description: Custom dupplicate key schema
+ * @description: middleware message when dupplicate field
  */
 UserSchema.post("save", function (error, doc, next) {
   if (error.name === "MongoServerError" && error.code === 11000) {

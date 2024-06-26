@@ -18,6 +18,7 @@ router.post(
   middlewares.verifyAccessToken,
   controllers.auth.changePassword
 );
+router.get("/re-new-accessToken", controllers.auth.reNewAccessToken);
 router.get("/verify", controllers.auth.verify);
 
 module.exports = router;

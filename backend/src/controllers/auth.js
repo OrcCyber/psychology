@@ -10,7 +10,6 @@ const {
 } = require("../utils");
 const bcrypt = require("bcrypt");
 
-// Mailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -18,7 +17,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
 });
-
 const resendEmail = errorHandler(async (req, res, next) => {
   const { email } = req.body;
   if (!email) {
@@ -50,7 +48,6 @@ const resendEmail = errorHandler(async (req, res, next) => {
     },
   });
 });
-
 const register = errorHandler(
   withTransaction(async (req, res, session) => {
     const { email, password, username } = req.body;
@@ -137,68 +134,74 @@ const signin = errorHandler(async (req, res, next) => {
     },
   });
 });
-
 const verify = errorHandler(
   withTransaction(async (req, res, session) => {
     const token = req.query.token;
-    const decoded = jwt.verify(token, process.env.VERIFY_EMAIL_TOKEN);
-    const email = decoded.email;
-    const user = await models.User.findOne({
-      email: email,
-    });
-    if (!user) {
-      return res.status(404).send({
-        status: "FAILED",
-        data: {
-          message: "User not found",
-        },
+    return jwt.verify(token, process.env.VERIFY_EMAIL_TOKEN, async (e, r) => {
+      if (e) {
+        return res.status(400).send({
+          status: "FAILED",
+          data: {
+            error: e.message,
+            message: "Please resend verify email.",
+          },
+        });
+      }
+      let email = r.email;
+      const user = await models.User.findOne({
+        email: email,
       });
-    }
-    const accessToken = generateJWT(
-      { email },
-      process.env.ACCESS_TOKEN_SECRET,
-      process.env.ACCESS_TOKEN_EXPIRES
-    );
-    const refreshToken = generateJWT(
-      { email },
-      process.env.REFRESH_TOKEN_SECRET,
-      process.env.REFRESH_TOKEN_EXPIRES
-    );
-    if (user.isVerify) {
+      if (!user) {
+        return res.status(404).send({
+          status: "FAILED",
+          data: {
+            message: "Email not found",
+          },
+        });
+      }
+      const accessToken = generateJWT(
+        { email },
+        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_EXPIRES
+      );
+      const refreshToken = generateJWT(
+        { email },
+        process.env.REFRESH_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_EXPIRES
+      );
+      if (user.isVerify) {
+        await user.save({ session });
+        return res.status(203).send({
+          status: "OK",
+          data: {
+            message: "Authenticated",
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          },
+        });
+      }
+      user.isVerify = true;
       await user.save({ session });
-      return res.status(304).send({
+      return res.status(202).send({
         status: "OK",
         data: {
-          message: "Authenticated user",
+          message: "Email is verify",
           accessToken: accessToken,
           refreshToken: refreshToken,
         },
       });
-    }
-    user.isVerify = true;
-    await user.save({ session });
-    return res.status(202).send({
-      status: "OK",
-      data: {
-        message: "Email is verify",
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      },
     });
   })
 );
-
 function generateJWT(payload, serect, expired) {
   return jwt.sign(payload, serect, {
     algorithm: "HS256",
     expiresIn: expired,
   });
 }
-
 const changePassword = errorHandler(
   withTransaction(async (req, res, session) => {
     const { currentPassword, newPassword, email } = req.body;
-    console.log(req.body);
     if (!currentPassword || !newPassword || !email) {
       return res.status(400).send({
         status: "FAILED",
@@ -241,6 +244,44 @@ const changePassword = errorHandler(
     }
   })
 );
+const reNewAccessToken = errorHandler(async (req, res) => {
+  const authHeader = req.headers["authorization"];
+  const refreshToken = authHeader && authHeader.split(" ")[1];
+  if (!refreshToken) {
+    logger.error(err);
+    return res.status(400).send({
+      status: "FAILED",
+      data: {
+        status: "Bad request",
+        message: "Refresh token is required",
+      },
+    });
+  }
+  return jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (e, r) => {
+    if (e) {
+      logger.error(e);
+      return res.status(400).send({
+        status: "FAILED",
+        data: {
+          status: e.message,
+          message: "Refresh token is exprired",
+        },
+      });
+    }
+    const { email } = r;
+    const newAccessToken = generateJWT(
+      { email },
+      process.env.ACCESS_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_EXPIRES
+    );
+    return res.status(200).send({
+      status: "OK",
+      data: {
+        accessToken: newAccessToken,
+      },
+    });
+  });
+});
 
 module.exports = {
   register,
@@ -248,4 +289,5 @@ module.exports = {
   verify,
   resendEmail,
   changePassword,
+  reNewAccessToken,
 };

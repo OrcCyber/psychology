@@ -1,21 +1,37 @@
 // 3rd-Party
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const logger = require("./logger");
+const { createServer } = require("node:http");
 const app = express();
 const connectToDatabase = require("./database");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const server = createServer(app);
 
 // Routes
 const routes = require("./routes");
 /************************Converter************************/
+app.use(cors());
 app.use(express.json());
 /************************Authentication************************/
 app.use("/api", routes);
 async function start() {
   const port = process.env.PORT;
   await connectToDatabase();
-  app.listen(port, () => {
-    logger.info(`Server listening at port ${port}`);
+  const io = new Server(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+  });
+  io.on("connection", (socket) => {
+    logger.info(socket.id);
+    socket.on("disconnect", () => {
+      logger.info(`Disconnect`);
+    });
+  });
+  server.listen(port, () => {
+    logger.info(`Sever listen at ${port}`);
   });
 }
 

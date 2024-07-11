@@ -1,8 +1,8 @@
 const logger = require("../logger");
-const { errorHandler } = require("../utils");
+const { exception } = require("../utils");
 const jwt = require("jsonwebtoken");
 
-const verifyAccessToken = errorHandler(async (req, res, next) => {
+const verifyAccessToken = exception(async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const accessToken = authHeader && authHeader.split(" ")[1];
   if (!accessToken) {

@@ -3,7 +3,7 @@ const logger = require("../logger");
 const models = require("../models");
 const nodemailer = require("nodemailer");
 const {
-  errorHandler,
+  exception,
   withTransaction,
   identifyRequest,
   isExpiredToken,
@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
 });
-const resendEmail = errorHandler(async (req, res, next) => {
+const resendEmail = exception(async (req, res, next) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).send({
@@ -48,7 +48,7 @@ const resendEmail = errorHandler(async (req, res, next) => {
     },
   });
 });
-const register = errorHandler(
+const register = exception(
   withTransaction(async (req, res, session) => {
     const { email, password, username } = req.body;
     const hostname = req.hostname;
@@ -89,7 +89,7 @@ const register = errorHandler(
     });
   })
 );
-const signin = errorHandler(async (req, res, next) => {
+const signin = exception(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await models.User.findOne({ email: email });
   if (!user)
@@ -134,7 +134,7 @@ const signin = errorHandler(async (req, res, next) => {
     },
   });
 });
-const verify = errorHandler(
+const verify = exception(
   withTransaction(async (req, res, session) => {
     const token = req.query.token;
     return jwt.verify(token, process.env.VERIFY_EMAIL_TOKEN, async (e, r) => {
@@ -199,7 +199,7 @@ function generateJWT(payload, serect, expired) {
     expiresIn: expired,
   });
 }
-const changePassword = errorHandler(
+const changePassword = exception(
   withTransaction(async (req, res, session) => {
     const { currentPassword, newPassword, email } = req.body;
     if (!currentPassword || !newPassword || !email) {
@@ -244,7 +244,7 @@ const changePassword = errorHandler(
     }
   })
 );
-const reNewAccessToken = errorHandler(async (req, res) => {
+const reNewAccessToken = exception(async (req, res) => {
   const authHeader = req.headers["authorization"];
   const refreshToken = authHeader && authHeader.split(" ")[1];
   if (!refreshToken) {

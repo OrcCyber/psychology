@@ -18,7 +18,7 @@ function withTransaction(fn) {
   };
 }
 
-function errorHandler(fn) {
+function exception(fn) {
   return async function (req, res, next) {
     try {
       let isNextCalled = false;
@@ -55,7 +55,7 @@ function isExpiredToken(exp) {
 
 module.exports = {
   withTransaction,
-  errorHandler,
+  exception,
   identifyRequest,
   isExpiredToken,
 };

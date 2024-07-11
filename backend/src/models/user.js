@@ -40,6 +40,12 @@ const UserSchema = new mongoose.Schema(
       default: "user",
       enum: ["user", "consultants", "root"],
     },
+    connections: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Connection",
+      },
+    ],
   },
   options
 );

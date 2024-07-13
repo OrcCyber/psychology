@@ -40,10 +40,32 @@ const UserSchema = new mongoose.Schema(
       default: "user",
       enum: ["user", "consultants", "root"],
     },
-    connections: [
+    friends: [
       {
-        type: mongoose.Types.ObjectId,
-        ref: "Connection",
+        userId: {
+          type: mongoose.Types.ObjectId,
+          ref: "users",
+          unique: true,
+        },
+        status: {
+          type: String,
+          enum: ["reject", "acepted", "pending"],
+        },
+        date: { type: Date },
+      },
+    ],
+    friendsRequest: [
+      {
+        userId: {
+          type: mongoose.Types.ObjectId,
+          ref: "users",
+          unique: true,
+        },
+        status: {
+          type: String,
+          enum: ["reject", "acepted", "pending"],
+        },
+        date: { type: Date },
       },
     ],
   },

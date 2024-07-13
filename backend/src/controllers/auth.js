@@ -79,6 +79,7 @@ const register = exception(
       subject: "Email Verification",
       html: `<a href="${url}">Verify</a>`,
     };
+    console.log(url);
     await transporter.sendMail(mailOptions);
     await user.save({ session });
     return res.status(201).send({

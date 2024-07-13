@@ -11,5 +11,9 @@ const controllers = require("../controllers");
 const middlewares = require("../middlewares");
 
 router.get("/search", middlewares.verifyAccessToken, controllers.user.search);
-
+router.post(
+  "/request-friend",
+  middlewares.verifyAccessToken,
+  controllers.user.requestFriend
+);
 module.exports = router;

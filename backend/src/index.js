@@ -7,10 +7,12 @@ const connectToDatabase = require("./database");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const server = createServer(app);
+const pinoHttp = require("pino-http");
 
 // Routes
 const routes = require("./routes");
 /************************Converter************************/
+app.use(pinoHttp({ logger }));
 app.use(cors());
 app.use(express.json());
 /************************Authentication************************/

@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const logger = require("../logger");
 const models = require("../models");
 const nodemailer = require("nodemailer");
+const { stringify, parse } = require("flatted");
 const {
   exception,
   withTransaction,
@@ -39,7 +40,7 @@ const resendEmail = exception(async (req, res, next) => {
     html: `<a href="${url}">Verify</a>`,
   };
   const emailResend = await transporter.sendMail(mailOptions);
-  logger.info(emailResend);
+  logger.info(stringify(emailResend));
   return res.status(201).send({
     status: "SUCCESS",
     data: {
@@ -79,7 +80,6 @@ const register = exception(
       subject: "Email Verification",
       html: `<a href="${url}">Verify</a>`,
     };
-    console.log(url);
     await transporter.sendMail(mailOptions);
     await user.save({ session });
     return res.status(201).send({
@@ -249,7 +249,7 @@ const reNewAccessToken = exception(async (req, res) => {
   const authHeader = req.headers["authorization"];
   const refreshToken = authHeader && authHeader.split(" ")[1];
   if (!refreshToken) {
-    logger.error(err);
+    logger.error(stringify(err));
     return res.status(400).send({
       status: "FAILED",
       data: {
@@ -260,7 +260,7 @@ const reNewAccessToken = exception(async (req, res) => {
   }
   return jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (e, r) => {
     if (e) {
-      logger.error(e);
+      logger.error(stringify(e));
       return res.status(400).send({
         status: "FAILED",
         data: {

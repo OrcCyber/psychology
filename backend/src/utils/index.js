@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const logger = require("../logger");
+const { stringify, parse } = require("flatted");
 
 function withTransaction(fn) {
   return async function (req, res, next) {
@@ -11,7 +12,7 @@ function withTransaction(fn) {
       logger.info("Transaction completed");
     } catch (e) {
       logger.error("Transaction error");
-      logger.error(e);
+      logger.error(stringify(e));
       (await session).abortTransaction();
       next(e);
     }
@@ -27,11 +28,11 @@ function exception(fn) {
         next(params);
       });
       if (!res.headerSent && !isNextCalled) {
-        logger.info(res.json(result));
+        logger.info(stringify(res.json(result)));
         res.json(result);
       }
     } catch (e) {
-      logger.error(e);
+      logger.error(stringify(e));
     }
   };
 }

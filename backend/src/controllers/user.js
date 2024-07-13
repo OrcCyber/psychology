@@ -9,68 +9,6 @@ const {
   isExpiredToken,
 } = require("../utils");
 
-const search = exception(async (req, res) => {
-  const { email } = req.body;
-  const user = await models.User.findOne({ email }).exec();
-  const pipeline = [
-    { $match: { _id: new ObjectId(user) } },
-    {
-      $project: {
-        friends: 1,
-        friendsRequest: 1,
-      },
-    },
-    {
-      $lookup: {
-        from: "users",
-        let: {
-          user: "$_id",
-          friendsList: "$friends.userId",
-          requestsList: "$friendsRequest.userId",
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $ne: ["$_id", "$$user"] },
-                  { $not: { $in: ["$_id", "$$friendsList"] } },
-                  { $not: { $in: ["$_id", "$$requestsList"] } },
-                ],
-              },
-            },
-          },
-          {
-            $project: {
-              id: 1,
-              email: 1,
-              username: 1,
-            },
-          },
-        ],
-        as: "nonFriends",
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        nonFriends: 1,
-      },
-    },
-  ];
-  const nonFriends = await models.User.aggregate(pipeline).exec();
-  const friends = await mapStateFriends(user, "friends");
-  const friendsRequest = await mapStateFriends(user, "friendsRequest");
-  return res.status(200).send({
-    status: "OK",
-    data: {
-      nonFriends: nonFriends[0].nonFriends,
-      friends: friends,
-      friendsRequest: friendsRequest,
-    },
-  });
-});
-
 const unpackFriends = async (user, field) => {
   let pipiline = [
     { $match: { _id: new ObjectId(user) } },
@@ -132,7 +70,68 @@ const mapStateFriends = async (user, field) => {
   return friends;
 };
 
-const requestFriend = exception(
+const search = exception(async (req, res) => {
+  const { email } = req.body;
+  const user = await models.User.findOne({ email }).exec();
+  const pipeline = [
+    { $match: { _id: new ObjectId(user) } },
+    {
+      $project: {
+        friends: 1,
+        friendsRequest: 1,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        let: {
+          user: "$_id",
+          friendsList: "$friends.userId",
+          requestsList: "$friendsRequest.userId",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $ne: ["$_id", "$$user"] },
+                  { $not: { $in: ["$_id", "$$friendsList"] } },
+                  { $not: { $in: ["$_id", "$$requestsList"] } },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              id: 1,
+              email: 1,
+              username: 1,
+            },
+          },
+        ],
+        as: "nonFriends",
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        nonFriends: 1,
+      },
+    },
+  ];
+  const nonFriends = await models.User.aggregate(pipeline).exec();
+  const friends = await mapStateFriends(user, "friends");
+  const friendsRequest = await mapStateFriends(user, "friendsRequest");
+  return res.status(200).send({
+    status: "OK",
+    data: {
+      nonFriends: nonFriends[0].nonFriends,
+      friends: friends,
+      friendsRequest: friendsRequest,
+    },
+  });
+});
+const sendFriendRequest = exception(
   withTransaction(async (req, res, session) => {
     const { email, emailFriend } = req.body;
     const user = await models.User.findOne({ email: email })
@@ -182,16 +181,14 @@ const requestFriend = exception(
     });
   })
 );
-
-const acceptedRequest = exception(
+const acceptedFriendRequest = exception(
   withTransaction(async (req, res, session) => {
     const { email, emailFriend } = req.body;
     const user = await models.User.findOne({ email: email }).exec();
     const partner = await models.User.findOne({ email: emailFriend }).exec();
   })
 );
-
-const rejectRequest = exception(
+const rejectFriendRequest = exception(
   withTransaction(async (req, res, session) => {
     const { email, emailFriend } = req.body;
     const user = await models.User.findOne({ email: email }).exec();
@@ -201,7 +198,7 @@ const rejectRequest = exception(
 
 module.exports = {
   search,
-  requestFriend,
-  acceptedRequest,
-  rejectRequest,
+  sendFriendRequest,
+  acceptedFriendRequest,
+  rejectFriendRequest,
 };

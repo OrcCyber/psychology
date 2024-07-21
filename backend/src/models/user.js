@@ -49,7 +49,7 @@ const UserSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["reject", "acepted", "pending"],
+          enum: ["reject", "accepted", "pending"],
         },
         date: { type: Date },
       },
@@ -63,7 +63,7 @@ const UserSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["reject", "acepted", "pending"],
+          enum: ["reject", "accepted", "pending"],
         },
         date: { type: Date },
       },

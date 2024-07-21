@@ -131,6 +131,68 @@ const search = exception(async (req, res) => {
     },
   });
 });
+const searchEmail = exception(async (req, res) => {
+  const { email, keyword } = req.body;
+  const user = await models.User.findOne({ email }).exec();
+  const pipeline = [
+    { $match: { _id: new ObjectId(user) } },
+    {
+      $project: {
+        friends: 1,
+        friendsRequest: 1,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        let: {
+          user: "$_id",
+          friendsList: "$friends.userId",
+          requestsList: "$friendsRequest.userId",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $ne: ["$_id", "$$user"] },
+                  { $not: { $in: ["$_id", "$$friendsList"] } },
+                  { $not: { $in: ["$_id", "$$requestsList"] } },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              id: 1,
+              email: 1,
+              username: 1,
+            },
+          },
+        ],
+        as: "nonFriends",
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        nonFriends: 1,
+      },
+    },
+  ];
+  const nonFriends = await models.User.aggregate(pipeline).exec();
+  const friends = await mapStateFriends(user, "friends");
+  const friendsRequest = await mapStateFriends(user, "friendsRequest");
+  return res.status(200).send({
+    status: "OK",
+    data: {
+      nonFriends: nonFriends[0].nonFriends,
+      // friends: friends,
+      // friendsRequest: friendsRequest,
+    },
+  });
+});
+
 const sendFriendRequest = exception(
   withTransaction(async (req, res, session) => {
     const { email, emailFriend } = req.body;
@@ -181,18 +243,156 @@ const sendFriendRequest = exception(
     });
   })
 );
+const resendRequestFriend = exception(
+  withTransaction(async (req, res, session) => {
+    const { email, emailFriend } = req.body;
+    const user = await models.User.findOne({ email: email })
+      .session(session)
+      .exec();
+    const friend = await models.User.findOne({ email: emailFriend })
+      .session(session)
+      .exec();
+    if (!user | !friend) {
+      return res.status(400).send({
+        status: "FAILED",
+        data: {
+          message: "Bad request",
+        },
+      });
+    }
+    logger.info(`User: ${user.username.firstName} ${user.username.lastName}`);
+    logger.info(
+      `Friend: ${friend.username.firstName} ${friend.username.lastName}`
+    );
+    let f = user.friends.find(
+      (f) =>
+        f.userId.toString() === friend._id.toString() && f.status === "reject"
+    );
+
+    let u = friend.friendsRequest.find(
+      (u) => u.userId.toString() === user.id.toString() && u.status === "reject"
+    );
+    if (!f | !u) {
+      return res.status(200).send({
+        status: "FAILED",
+        data: {
+          message: "Bad request",
+        },
+      });
+    }
+    f.status = "pending";
+    u.status = "pending";
+    await user.save({ session });
+    await friend.save({ session });
+    return res.status(200).send({
+      status: "SUCCESS",
+      data: {
+        message: "Rejected OK",
+        user: user,
+        friend: friend,
+      },
+    });
+  })
+);
 const acceptedFriendRequest = exception(
   withTransaction(async (req, res, session) => {
     const { email, emailFriend } = req.body;
-    const user = await models.User.findOne({ email: email }).exec();
-    const partner = await models.User.findOne({ email: emailFriend }).exec();
+    const user = await models.User.findOne({ email: email })
+      .session(session)
+      .exec();
+    const friend = await models.User.findOne({ email: emailFriend })
+      .session(session)
+      .exec();
+    if (!user | !friend) {
+      return res.status(400).send({
+        status: "FAILED",
+        data: {
+          message: "Bad request",
+        },
+      });
+    }
+    let f = user.friends.find(
+      (f) =>
+        f.userId.toString() === friend._id.toString() && f.status === "pending"
+    );
+
+    let u = friend.friendsRequest.find(
+      (u) =>
+        u.userId.toString() === user.id.toString() && u.status === "pending"
+    );
+    if (!f | !u) {
+      return res.status(200).send({
+        status: "FAILED",
+        data: {
+          message: "Bad request",
+        },
+      });
+    }
+    f.status = "accepted";
+    u.status = "accepted";
+    await user.save({ session });
+    await friend.save({ session });
+    return res.status(200).send({
+      status: "SUCCESS",
+      data: {
+        message: "Acepted OK",
+        user: user,
+        friend: friend,
+      },
+    });
   })
 );
 const rejectFriendRequest = exception(
   withTransaction(async (req, res, session) => {
     const { email, emailFriend } = req.body;
-    const user = await models.User.findOne({ email: email }).exec();
-    const partner = await models.User.findOne({ email: emailFriend }).exec();
+    const user = await models.User.findOne({ email: email })
+      .session(session)
+      .exec();
+    const friend = await models.User.findOne({ email: emailFriend })
+      .session(session)
+      .exec();
+    if (!user | !friend) {
+      return res.status(400).send({
+        status: "FAILED",
+        data: {
+          message: "Bad request",
+        },
+      });
+    }
+    logger.info(`User: ${user.username.firstName} ${user.username.lastName}`);
+    logger.info(
+      `Friend: ${friend.username.firstName} ${friend.username.lastName}`
+    );
+    let u = user.friendsRequest.find(
+      (f) =>
+        f.userId.toString() == friend.id.toString() && f.status === "pending"
+    );
+    let f = friend.friends.find(
+      (u) =>
+        u.userId.toString() === user.id.toString() && u.status === "pending"
+    );
+    console.log(u);
+    console.log(f);
+    if (!u | !f) {
+      return res.status(200).send({
+        status: "FAILED",
+        data: {
+          message: "Bad request",
+        },
+      });
+    }
+    f.status = "reject";
+    u.status = "reject";
+    await user.save({ session });
+    await friend.save({ session });
+    return res.status(200).send({
+      status: "SUCCESS",
+      data: {
+        message: "Rejected OK",
+        user: user,
+        friend: friend,
+      },
+    });
   })
 );
 
@@ -201,4 +401,6 @@ module.exports = {
   sendFriendRequest,
   acceptedFriendRequest,
   rejectFriendRequest,
+  resendRequestFriend,
+  searchEmail,
 };

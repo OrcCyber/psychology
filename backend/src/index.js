@@ -27,7 +27,6 @@ async function start() {
     },
   });
   io.on("connection", (socket) => {
-    logger.info(socket.id);
     socket.on("disconnect", () => {
       logger.info(`Disconnect`);
     });

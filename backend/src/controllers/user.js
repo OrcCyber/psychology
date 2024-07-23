@@ -211,10 +211,10 @@ const sendFriendRequest = exception(
       });
     }
     // Check friend or request to friend exist.
-    const isFriendExist = await user.friends.some(
+    const isFriendExist = user.friends.some(
       (f) => f.userId.toString() === friend._id.toString()
     );
-    const isFriendRequestExist = await friend.friendsRequest.some(
+    const isFriendRequestExist = friend.friendsRequest.some(
       (f) => f.userId.toString() === user._id.toString()
     );
     if (isFriendExist || isFriendRequestExist) {
@@ -311,25 +311,24 @@ const acceptedFriendRequest = exception(
         },
       });
     }
-    let f = user.friends.find(
-      (f) =>
-        f.userId.toString() === friend._id.toString() && f.status === "pending"
+    let userSendRequest = user.friendsRequest.find(
+      (u) =>
+        u.userId.toString() === friend._id.toString() && u.status === "pending"
     );
-
-    let u = friend.friendsRequest.find(
+    let userAcceptRequest = friend.friends.find(
       (u) =>
         u.userId.toString() === user.id.toString() && u.status === "pending"
     );
-    if (!f | !u) {
-      return res.status(200).send({
+    if (!userSendRequest | !userAcceptRequest) {
+      return res.status(400).send({
         status: "FAILED",
         data: {
           message: "Bad request",
         },
       });
     }
-    f.status = "accepted";
-    u.status = "accepted";
+    userSendRequest.status = "accepted";
+    userAcceptRequest.status = "accepted";
     await user.save({ session });
     await friend.save({ session });
     return res.status(200).send({
@@ -363,26 +362,24 @@ const rejectFriendRequest = exception(
     logger.info(
       `Friend: ${friend.username.firstName} ${friend.username.lastName}`
     );
-    let u = user.friendsRequest.find(
-      (f) =>
-        f.userId.toString() == friend.id.toString() && f.status === "pending"
+    let userSendRequest = user.friendsRequest.find(
+      (u) =>
+        u.userId.toString() === friend._id.toString() && u.status === "pending"
     );
-    let f = friend.friends.find(
+    let userRejectRequest = friend.friends.find(
       (u) =>
         u.userId.toString() === user.id.toString() && u.status === "pending"
     );
-    console.log(u);
-    console.log(f);
-    if (!u | !f) {
-      return res.status(200).send({
+    if (!userSendRequest | !userRejectRequest) {
+      return res.status(400).send({
         status: "FAILED",
         data: {
           message: "Bad request",
         },
       });
     }
-    f.status = "reject";
-    u.status = "reject";
+    userSendRequest.status = "reject";
+    userRejectRequest.status = "reject";
     await user.save({ session });
     await friend.save({ session });
     return res.status(200).send({

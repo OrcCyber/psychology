@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const logger = require("../logger");
 const options = { timestamps: true };
 const UserSchema = new mongoose.Schema(
   {
@@ -78,8 +77,6 @@ UserSchema.pre("save", async function (next) {
   const user = this;
   if (!user.isModified("password")) return next();
   const hash = await bcrypt.hash(user.password, 10);
-  console.log(`mật khẩu trước khi lưu vào cơ sở dữ liệu ==> ${user.password}`);
-  console.log(`mật khẩu sau khi băm bằng bcrypt ==> ${hash}`);
   user.password = hash;
   next();
 });
@@ -97,6 +94,5 @@ UserSchema.post("save", function (error, doc, next) {
   }
 });
 
-// UserSchema.methods.isExist("check");
 const User = mongoose.model("users", UserSchema);
 module.exports = User;

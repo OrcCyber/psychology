@@ -3,7 +3,6 @@ const { exception, withTransaction } = require("../utils");
 
 const getConversations = exception(async (req, res) => {
   const { email } = req.body;
-  console.log(email);
   const user = await models.User.findOne({ email: email });
   if (!user) {
     return res.status(400).send({
@@ -19,8 +18,7 @@ const getConversations = exception(async (req, res) => {
     .populate({ path: "participants", select: "id email username" })
     .populate({
       path: "messages",
-      select: "id createdAt message sender receiver isRead ",
-      sort: [["createdAt", "desc"]],
+      select: "id createdAt message sender receiver isRead",
     })
     .sort();
   if (!conversations) {
@@ -38,6 +36,40 @@ const getConversations = exception(async (req, res) => {
     data: conversations,
   });
 });
+
+const getMessagesFromConversation = exception(async (req, res) => {
+  const { conversationId } = req.body;
+  const conversation = await models.Conversation.findById(
+    conversationId
+  ).populate({
+    path: "messages",
+    select: "id createdAt message sender receiver isRead",
+    populate: [
+      {
+        path: "sender",
+        select: "id email username",
+      },
+      {
+        path: "receiver",
+        select: "id email username",
+      },
+    ],
+  });
+
+  if (!conversation) {
+    return res.status(400).send({
+      status: "FAILED",
+      data: {
+        message: "Bad request",
+      },
+    });
+  }
+  return res.status(200).send({
+    status: "OK",
+    data: conversation,
+  });
+});
 module.exports = {
   getConversations,
+  getMessagesFromConversation,
 };

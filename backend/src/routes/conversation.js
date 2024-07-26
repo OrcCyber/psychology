@@ -10,9 +10,16 @@ const controllers = require("../controllers");
 // Midlewares
 const middlewares = require("../middlewares");
 
-router.get(
-  "/getAll",
-  middlewares.verifyAccessToken,
-  controllers.conversation.getConversations
-);
+router
+  .get(
+    "/getAll",
+    middlewares.verifyAccessToken,
+    controllers.conversation.getConversations
+  )
+  .get(
+    "/getDetail",
+    middlewares.verifyAccessToken,
+    controllers.conversation.getMessagesFromConversation
+  );
+
 module.exports = router;

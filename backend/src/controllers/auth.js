@@ -40,7 +40,6 @@ const resendEmail = exception(async (req, res, next) => {
     html: `<a href="${url}">Verify</a>`,
   };
   const emailResend = await transporter.sendMail(mailOptions);
-  logger.info(stringify(emailResend));
   return res.status(201).send({
     status: "SUCCESS",
     data: {
@@ -128,8 +127,15 @@ const signin = exception(async (req, res, next) => {
   }
   return res.status(202).send({
     status: "OK",
+    message: "Login accepted",
     data: {
-      message: "Login accepted",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        imgUrl: null,
+      },
+
       accessToken: accessToken,
       refreshToken: refreshToken,
     },

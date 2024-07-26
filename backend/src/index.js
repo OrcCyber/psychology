@@ -8,6 +8,7 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 const server = createServer(app);
 const pinoHttp = require("pino-http");
+const start = require("../socket/index");
 
 // Routes
 const routes = require("./routes");
@@ -17,7 +18,10 @@ app.use(cors());
 app.use(express.json());
 /************************Authentication************************/
 app.use("/api", routes);
-async function start() {
+app.use("/", (req, res) => {
+  res.json("Welcome to Server");
+});
+async function run() {
   const port = process.env.PORT;
   await connectToDatabase();
   const io = new Server(server, {
@@ -26,14 +30,10 @@ async function start() {
       methods: ["GET", "POST"],
     },
   });
-  io.on("connection", (socket) => {
-    socket.on("disconnect", () => {
-      logger.info(`Disconnect`);
-    });
-  });
+  start(io);
   server.listen(port, () => {
     logger.info(`Sever listen at ${port}`);
   });
 }
 
-module.exports = start;
+module.exports = run;

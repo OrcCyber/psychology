@@ -6,9 +6,12 @@ function start(io) {
     const id = socket.handshake.query.id;
     onlines.set(id, socket.id);
     socket.on("send", async (data) => {
-      let dataJson = JSON.parse(data);
-      const { senderId, recieverId, message } = { ...dataJson };
-      console.log(senderId);
+      if (typeof data === "string") {
+        data = JSON.parse(data);
+      }
+      const senderId = data.senderId;
+      const recieverId = data.recieverId;
+      const message = data.message;
       const sender = await models.User.findById(senderId).select(
         "id email username"
       );

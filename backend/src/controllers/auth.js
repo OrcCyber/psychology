@@ -73,7 +73,7 @@ const register = exception(
       process.env.VERIFY_EMAIL_TOKEN,
       process.env.VERIFY_EMAIL_EXPIRES
     );
-    const url = `http://${hostname}:${process.env.PORT}/api/auth/verify?token=${token}`;
+    const url = `https://psychology.timmodule.tech/api/auth/verify?token=${token}`;
     let mailOptions = {
       to: email,
       subject: "Email Verification",

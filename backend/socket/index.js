@@ -6,7 +6,9 @@ function start(io) {
   io.on("connection", async (socket) => {
     const id = socket.handshake.query.id;
     onlines.set(id, socket.id);
-    logger.info(onlines);
+    logger.info("User ID", id);
+    logger.info("Socket ID", socket.id);
+    logger.info("Map User Conneted", onlines);
     socket.on("send", async (data) => {
       if (typeof data === "string") {
         data = JSON.parse(data);

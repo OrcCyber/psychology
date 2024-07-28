@@ -6,9 +6,9 @@ function start(io) {
   io.on("connection", async (socket) => {
     const id = socket.handshake.query.id;
     onlines.set(id, socket.id);
-    logger.info("User ID", id);
-    logger.info("Socket ID", socket.id);
-    logger.info("Map User Conneted", onlines);
+    logger.info(`User đã login có ID là: ${id}`);
+    logger.info(`User đã login có Socket ID là: ${socket.id}`);
+    logger.info(`Tất cả người dùng đã đăng nhập: ${onlines}`);
     socket.on("send", async (data) => {
       if (typeof data === "string") {
         data = JSON.parse(data);
@@ -41,7 +41,7 @@ function start(io) {
       await Promise.all([conversation.save(), m.save()]);
       const socketTargetId = onlines.get(recieverId);
       if (socketTargetId) {
-        logger.info("Push socket target", socketTargetId);
+        logger.info(`Đã gửi đến Socket ID: ${socketTargetId}`);
         io.to(socketTargetId).emit("recieve", m);
       }
       // Handler push notification

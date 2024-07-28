@@ -1,10 +1,12 @@
 const { disconnect } = require("mongoose");
 const models = require("../src/models");
+const logger = require("../src/logger");
 const onlines = new Map();
 function start(io) {
   io.on("connection", async (socket) => {
     const id = socket.handshake.query.id;
     onlines.set(id, socket.id);
+    logger.info(onlines);
     socket.on("send", async (data) => {
       if (typeof data === "string") {
         data = JSON.parse(data);
@@ -37,6 +39,7 @@ function start(io) {
       await Promise.all([conversation.save(), m.save()]);
       const socketTargetId = onlines.get(recieverId);
       if (socketTargetId) {
+        logger.info("Push socket target", socketTargetId);
         io.to(socketTargetId).emit("recieve", m);
       }
       // Handler push notification
